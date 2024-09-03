@@ -12,7 +12,74 @@
     <p id="setup"></p>
     <p id="delivery"></p>
     <br><br>
-    <p id="category"></p>
+
+    <h2>Categories</h2>
+    <div id="categoriesDiv">
+        <div>
+            <input type="checkbox" checked id="category_programming" class="categoriesInput">
+            <label for="category_programming">Programming</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="category_pun" class="categoriesInput">
+            <label for="category_pun">Pun</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="category_spooky" class="categoriesInput">
+            <label for="category_spooky">Spooky</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="category_dark" class="categoriesInput">
+            <label for="category_dark">Dark</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="category_christmas" class="categoriesInput">
+            <label for="category_christmas">Christmas</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="category_misc" class="categoriesInput">
+            <label for="category_misc">Misc</label>
+        </div>
+    </div><br>
+    
+    <h2>Blacklist Flags</h2>
+    <div id="blacklistDiv">
+        <div>
+            <input type="checkbox" id="blacklist_nsfw" class="blacklistInput">
+            <label for="blacklist_nsfw">NSFW</label>
+        </div>
+        <div>
+            <input type="checkbox" id="blacklist_religious" class="blacklistInput">
+            <label for="blacklist_religious">Religious</label>
+        </div>
+        <div>
+            <input type="checkbox" id="blacklist_political" class="blacklistInput">
+            <label for="blacklist_political">Political</label>
+        </div>
+        <div>
+            <input type="checkbox" id="blacklist_racist" class="blacklistInput">
+            <label for="blacklist_racist">Racist</label>
+        </div>
+        <div>
+            <input type="checkbox" id="blacklist_sexist" class="blacklistInput">
+            <label for="blacklist_sexist">Sexist</label>
+        </div>
+        <div>
+            <input type="checkbox" id="blacklist_explicit" class="blacklistInput">
+            <label for="blacklist_explicit">Explicit</label>
+        </div>
+    </div><br>
+
+    <h2>Joke Type</h2>
+    <div id="jokeTypesDiv">
+        <div>
+            <input type="checkbox" checked id="jokeTypes_single" class="jokeTypesInput">
+            <label for="jokeTypes_single">Single</label>
+        </div>
+        <div>
+            <input type="checkbox" checked id="jokeTypes_twopart" class="jokeTypesInput">
+            <label for="jokeTypes_twopart">Two Part</label>
+        </div>
+    </div>
 
 <style>
 
@@ -28,25 +95,45 @@
     const setupElem = document.getElementById("setup");
     const deliveryElem = document.getElementById("delivery");
     const categoryElem = document.getElementById("category");
+    const categoriesInputs = document.getElementsByClassName("categoriesInput");
+    const blacklistInputs = document.getElementsByClassName("blacklistInput");
+    const jokeTypesInputs = document.getElementsByClassName("jokeTypesInput");
 
     const synth = window.speechSynthesis;
-    let utterThis;
+    let url, utterThis, categories, blacklist, jokeTypes;
 
     document.onload = main();
 
     function main() {
-        let categories = [], blacklist = [], jokeTypes = [true, true];
-
         tellJokeBtn.addEventListener("click", function() {
-            requestJoke(buildURL(categories, blacklist, jokeTypes));
+            readInputs();
+            url = buildURL(categories, blacklist, jokeTypes);
+            requestJoke(url);
         });
+    }
+
+    function readInputs() {
+        categories = [];
+        blacklist = [];
+        jokeTypes = [];
+
+        for (let i = 0; i < categoriesInputs.length; i++) 
+            if (categoriesInputs[i].checked) 
+                categories.push(categoriesInputs[i].id.split("_")[1]);
+            
+        for (let i = 0; i < blacklistInputs.length; i++) 
+            if (blacklistInputs[i].checked) 
+                blacklist.push(blacklistInputs[i].id.split("_")[1]);
+
+        for (let i = 0; i < jokeTypesInputs.length; i++) 
+            jokeTypes.push(jokeTypesInputs[i].checked);
     }
 
     function buildURL(categories, blacklist, jokeTypes) {
         let url = "https://v2.jokeapi.dev/joke/";
         let blacklistEmpty = true;
 
-        if (categories.length == 0)
+        if (categories.length == 0 || categories.length == 6)
             url += "Any";
         else {
             for (let i = 0; i < categories.length; i++) {
@@ -69,10 +156,10 @@
 
         if (!jokeTypes[0] && !jokeTypes[1]) 
             alert("You have to select at least one joke type.");
-        else if ((jokeTypes[0] && !jokeTypes[1]) || !jokeTypes[0] && jokeTypes[1])
+        else if ((jokeTypes[0] && !jokeTypes[1]) || (!jokeTypes[0] && jokeTypes[1]))
             url += (blacklistEmpty ? "?" : "&") + "type=" + (jokeTypes[0] ? "single" : "twopart");
 
-        console.log(url);
+        //console.log(url);
         return url;
     }
 
@@ -85,42 +172,54 @@
                     alert("An error has occurred :(");
                 } else {
                     const json = JSON.parse(xhttp.responseText);
-                    console.log(json);
+                    //console.log(json);
                     synth.cancel();
 
                     if (json.type == "single") {
                         setupElem.innerText = json.joke;
+                        deliveryElem.innerText = "";
 
                         // speak
                         utterThis = new SpeechSynthesisUtterance(json.joke);
-                        utterThis.voice = synth.getVoices()[4];
-                        utterThis.rate = 1.15;
-                        synth.speak(utterThis);
+                        speak(1.15);
                     } else {
                         setupElem.innerText = json.setup;
                         deliveryElem.innerText = json.delivery;
 
                         // speak
                         utterThis = new SpeechSynthesisUtterance(json.setup);
-                        utterThis.voice = synth.getVoices()[4];
-                        utterThis.rate = 1.15;
-                        synth.speak(utterThis);
-
+                        speak(1.15);
                         sleep(300);
-
                         utterThis = new SpeechSynthesisUtterance(json.delivery);
-                        utterThis.voice = synth.getVoices()[4];
-                        utterThis.rate = 1.12;
-                        synth.speak(utterThis);
+                        speak(1.12);
                     }
-
-                    categoryElem.innerText = "Category: " + json.category;
                 }
             }
         };
 
         xhttp.open("GET", url, true);
         xhttp.send();
+    }
+
+    function speak(volume) {
+        utterThis.voice = getVoice();
+        utterThis.rate = volume;
+        synth.speak(utterThis);
+    }
+
+    function getVoice() {
+        const voices = synth.getVoices();
+        let voice;
+
+        for (let i = 0; i < voices.length; i++) {
+            if (voices[i].name == "Google UK English Male")
+                return voices[i];
+
+            if (voices[i].lang == "en-GB" || voices[i].lang == "en-US")
+                voice = voices[i];
+        }
+        
+        return voice;
     }
 
     function sleep(ms) {
