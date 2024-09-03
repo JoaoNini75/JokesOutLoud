@@ -154,9 +154,12 @@
             }
         }
 
-        if (!jokeTypes[0] && !jokeTypes[1]) 
+        if (!jokeTypes[0] && !jokeTypes[1]) {
             alert("You have to select at least one joke type.");
-        else if ((jokeTypes[0] && !jokeTypes[1]) || (!jokeTypes[0] && jokeTypes[1]))
+            return null;
+        }
+            
+        if ((jokeTypes[0] && !jokeTypes[1]) || (!jokeTypes[0] && jokeTypes[1]))
             url += (blacklistEmpty ? "?" : "&") + "type=" + (jokeTypes[0] ? "single" : "twopart");
 
         //console.log(url);
@@ -164,6 +167,9 @@
     }
 
     function requestJoke(url) {
+        if (url == null)
+            return;
+
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
